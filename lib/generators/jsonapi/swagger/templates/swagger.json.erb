@@ -75,11 +75,13 @@
     def properties(attrs: [])
       Hash.new{|h, k| h[k] = {}} .tap do |props|
         attrs.each do |attr|
-         columns = columns_with_comment(need_encoding: false)
-          props[attr][:type] = columns[attr][:type]
-          props[attr][:items] = { type: columns[attr][:items_type] } if columns[attr][:is_array]
-          props[attr][:'x-nullable'] = columns[attr][:nullable]
-          props[attr][:description] = columns[attr][:comment] || ''
+          # We dasherize the attribute key because JSONApiResources needs attributes to be dasherized
+          dasherizedAttr = attr.to_s.gsub("_", "-")
+          columns = columns_with_comment(need_encoding: false)
+          props[dasherizedAttr][:type] = columns[attr][:type]
+          props[dasherizedAttr][:items] = { type: columns[attr][:items_type] } if columns[attr][:is_array]
+          props[dasherizedAttr][:'x-nullable'] = columns[attr][:nullable]
+          props[dasherizedAttr][:description] = columns[attr][:comment] || ''
         end
       end
     end
