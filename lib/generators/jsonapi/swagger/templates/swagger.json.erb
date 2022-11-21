@@ -1,7 +1,9 @@
 {
   "swagger": "<%= swagger_version %>",
   "info": <%= swagger_info %>,
+  "host": "<%= swagger_host %>",
   "basePath" : "<%= swagger_base_path %>",
+  "securityDefinitions": <%= swagger_security_definitions %>,
   <%-
     def list_resource_parameters
       [].tap do |parameters|

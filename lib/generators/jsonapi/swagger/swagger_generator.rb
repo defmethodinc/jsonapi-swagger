@@ -41,8 +41,16 @@ module Jsonapi
       JSON.pretty_generate(Jsonapi::Swagger.info)
     end
 
+    def swagger_host
+      Jsonapi::Swagger.host
+    end
+
     def swagger_base_path
       Jsonapi::Swagger.base_path
+    end
+
+    def swagger_security_definitions
+      JSON.pretty_generate(Jsonapi::Swagger.security_definitions)
     end
 
     def swagger_file_path
