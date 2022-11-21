@@ -43,26 +43,30 @@
         name: :data,
         in: :body,
         schema: {
-          type: :object,
           properties: {
-            type: { type: :string, default: route_resouces },
-            attributes: {
+            data: {
               type: :object,
-              properties: properties(attrs: creatable_fields)
+              properties: {
+                type: { type: :string, default: route_resouces },
+                attributes: {
+                  type: :object,
+                  properties: properties(attrs: creatable_fields)
+                }
+              }
             }
           }
         },
         description: tt(:request_body)
      }
-     parameters[:schema][:properties][:relationships] ||= {}
-     parameters[:schema][:properties][:relationships] = { type: :object, properties: create_relationships_properties }
+     parameters[:schema][:properties][:data][:properties][:relationships] ||= {}
+     parameters[:schema][:properties][:data][:properties][:relationships] = { type: :object, properties: create_relationships_properties }
      parameters
     end
 
     def patch_resource_parameters
       patch_parameters =  create_resource_parameters.dup
-      patch_parameters[:schema][:properties][:id] ||= {}
-      patch_parameters[:schema][:properties][:id].merge!({ type: :integer, description: 'ID' })
+      patch_parameters[:schema][:properties][:data][:properties][:id] ||= {}
+      patch_parameters[:schema][:properties][:data][:properties][:id].merge!({ type: :integer, description: 'ID' })
       parameters = [{ name: :id, in: :path, type: :integer, description: 'ID', required: true }]
       parameters << patch_parameters
       parameters
@@ -263,6 +267,7 @@
         summary: "#{route_resouces} #{tt(:list)}",
         tags: [route_resouces],
         produces: ['application/vnd.api+json'],
+        security: [{ BasicAuth: [] }],
         parameters: list_resource_parameters,
         responses: list_resource_responses
       }
@@ -273,6 +278,7 @@
         summary: "#{route_resouces} #{tt(:detail)}",
         tags: [route_resouces],
         produces: ['application/vnd.api+json'],
+        security: [{ BasicAuth: [] }],
         parameters: show_resource_parameters,
         responses: show_resource_responses
       }
@@ -285,6 +291,7 @@ if mutable?
       tags: [route_resouces],
       consumes: ['application/vnd.api+json'],
       produces: ['application/vnd.api+json'],
+      security: [{ BasicAuth: [] }],
       parameters: [create_resource_parameters],
       responses: create_resource_responses
     }
@@ -296,6 +303,7 @@ if mutable?
       tags: [route_resouces],
       consumes: ['application/vnd.api+json'],
       produces: ['application/vnd.api+json'],
+      security: [{ BasicAuth: [] }],
       parameters: patch_resource_parameters,
       responses: show_resource_responses
     }
@@ -306,6 +314,7 @@ if mutable?
       summary: "#{route_resouces} #{tt(:delete)}",
       tags: [route_resouces],
       produces: ['application/vnd.api+json'],
+      security: [{ BasicAuth: [] }],
       parameters: delete_resource_parameters,
       responses: delete_resource_responses
     }
