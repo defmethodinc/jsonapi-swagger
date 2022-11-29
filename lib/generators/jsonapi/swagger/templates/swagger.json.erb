@@ -285,40 +285,51 @@
     }
 
 if mutable?
-  doc['paths']["/#{route_resouces}"].merge!({
-    post: {
-      summary: "#{route_resouces} #{tt(:create)}",
-      tags: [route_resouces],
-      consumes: ['application/vnd.api+json'],
-      produces: ['application/vnd.api+json'],
-      security: [{ BasicAuth: [] }],
-      parameters: [create_resource_parameters],
-      responses: create_resource_responses
-    }
-  })
+  if Rails.application.routes.recognize_path("#{route_resouces}", method: :post)[:action] != 'error'
+      doc['paths']["/#{route_resouces}"].merge!({
+      post: {
+        summary: "#{route_resouces} #{tt(:create)}",
+        tags: [route_resouces],
+        consumes: ['application/vnd.api+json'],
+        produces: ['application/vnd.api+json'],
+        security: [{ BasicAuth: [] }],
+        parameters: [create_resource_parameters],
+        responses: create_resource_responses
+      }
+    })
+  end
 
-  doc['paths']["/#{route_resouces}/{id}"].merge!({
-    patch: {
-      summary: "#{route_resouces} #{tt(:patch)}",
-      tags: [route_resouces],
-      consumes: ['application/vnd.api+json'],
-      produces: ['application/vnd.api+json'],
-      security: [{ BasicAuth: [] }],
-      parameters: patch_resource_parameters,
-      responses: show_resource_responses
-    }
-  })
+  current_resource = file_name.pluralize
+  # the db query returns a hash that is then converted into an array (length 1) from which we grab the value stored under id
+  id = ActiveRecord::Base.connection.exec_query("SELECT id FROM #{current_resource} LIMIT 1").to_a[0]["id"]
+  
+  if Rails.application.routes.recognize_path("#{route_resouces}/#{id}", method: :patch)[:action] != 'error'
+    doc['paths']["/#{route_resouces}/{id}"].merge!({
+      patch: {
+        summary: "#{route_resouces} #{tt(:patch)}",
+        tags: [route_resouces],
+        consumes: ['application/vnd.api+json'],
+        produces: ['application/vnd.api+json'],
+        security: [{ BasicAuth: [] }],
+        parameters: patch_resource_parameters,
+        responses: show_resource_responses
+      }
+    })
+  end
 
-  doc['paths']["/#{route_resouces}/{id}"].merge!({
-    delete: {
-      summary: "#{route_resouces} #{tt(:delete)}",
-      tags: [route_resouces],
-      produces: ['application/vnd.api+json'],
-      security: [{ BasicAuth: [] }],
-      parameters: delete_resource_parameters,
-      responses: delete_resource_responses
-    }
-  })
+  if Rails.application.routes.recognize_path("#{route_resouces}/#{id}", method: :delete)[:action] != 'error'
+    doc['paths']["/#{route_resouces}/{id}"].merge!({
+      delete: {
+        summary: "#{route_resouces} #{tt(:delete)}",
+        tags: [route_resouces],
+        produces: ['application/vnd.api+json'],
+        security: [{ BasicAuth: [] }],
+        parameters: delete_resource_parameters,
+        responses: delete_resource_responses
+      }
+    })
+  end
+
 else
   doc['paths']["/#{route_resouces}"].delete(:post)
   doc['paths']["/#{route_resouces}/{id}"].delete(:patch)
