@@ -25,7 +25,7 @@
       end
     end
 
-    def show_resource_parameters
+    def detail_resource_parameters
       [].tap do |parameters|
         parameters << { name: :id, in: :path, type: :integer, description: 'ID', required: true }
         if relationships.present?
@@ -204,7 +204,7 @@
       }
     end
 
-    def show_resource_responses
+    def detail_resource_responses
       {
         '200' => {
           description: tt(:get_detail),
@@ -212,6 +212,8 @@
         }
       }
     end
+
+    alias patch_resource_responses detail_resource_responses
 
     def create_resource_responses
       {
@@ -262,79 +264,40 @@
       }
     end
 
-    doc['paths']["/#{route_resouces}"] = {
-      get: {
-        summary: "#{route_resouces} #{tt(:list)}",
+    current_resource = file_name.pluralize
+    id = ActiveRecord::Base.connection.exec_query("SELECT id FROM #{current_resource} LIMIT 1").to_a[0]["id"]
+
+    doc['paths']["/#{route_resouces}"] = {}
+    doc['paths']["/#{route_resouces}/{id}"] = {}
+
+    [:list, :detail, :create, :patch, :delete].each do |action|
+      method = action
+      if action == :list || action == :detail
+        method = :get
+      elsif action == :create
+        method = :post
+      end
+
+      path_hash = Hash.new
+      path_hash[method] = {
+        summary: "#{route_resouces} #{tt(action)}",
         tags: [route_resouces],
         produces: ['application/vnd.api+json'],
         security: [{ BasicAuth: [] }],
-        parameters: list_resource_parameters,
-        responses: list_resource_responses
+        parameters: send("#{action.to_s}_resource_parameters"),
+        responses: send("#{action.to_s}_resource_responses")
       }
-    }
 
-    doc['paths']["/#{route_resouces}/{id}"] = {
-      get: {
-        summary: "#{route_resouces} #{tt(:detail)}",
-        tags: [route_resouces],
-        produces: ['application/vnd.api+json'],
-        security: [{ BasicAuth: [] }],
-        parameters: show_resource_parameters,
-        responses: show_resource_responses
-      }
-    }
-
-if mutable?
-  if Rails.application.routes.recognize_path("#{route_resouces}", method: :post)[:action] != 'error'
-      doc['paths']["/#{route_resouces}"].merge!({
-      post: {
-        summary: "#{route_resouces} #{tt(:create)}",
-        tags: [route_resouces],
-        consumes: ['application/vnd.api+json'],
-        produces: ['application/vnd.api+json'],
-        security: [{ BasicAuth: [] }],
-        parameters: [create_resource_parameters],
-        responses: create_resource_responses
-      }
-    })
-  end
-
-  current_resource = file_name.pluralize
-  # the db query returns a hash that is then converted into an array (length 1) from which we grab the value stored under id
-  id = ActiveRecord::Base.connection.exec_query("SELECT id FROM #{current_resource} LIMIT 1").to_a[0]["id"]
-  
-  if Rails.application.routes.recognize_path("#{route_resouces}/#{id}", method: :patch)[:action] != 'error'
-    doc['paths']["/#{route_resouces}/{id}"].merge!({
-      patch: {
-        summary: "#{route_resouces} #{tt(:patch)}",
-        tags: [route_resouces],
-        consumes: ['application/vnd.api+json'],
-        produces: ['application/vnd.api+json'],
-        security: [{ BasicAuth: [] }],
-        parameters: patch_resource_parameters,
-        responses: show_resource_responses
-      }
-    })
-  end
-
-  if Rails.application.routes.recognize_path("#{route_resouces}/#{id}", method: :delete)[:action] != 'error'
-    doc['paths']["/#{route_resouces}/{id}"].merge!({
-      delete: {
-        summary: "#{route_resouces} #{tt(:delete)}",
-        tags: [route_resouces],
-        produces: ['application/vnd.api+json'],
-        security: [{ BasicAuth: [] }],
-        parameters: delete_resource_parameters,
-        responses: delete_resource_responses
-      }
-    })
-  end
-
-else
-  doc['paths']["/#{route_resouces}"].delete(:post)
-  doc['paths']["/#{route_resouces}/{id}"].delete(:patch)
-  doc['paths']["/#{route_resouces}/{id}"].delete(:delete)
-end
--%>
+      if action == :list || action == :create
+        if Rails.application.routes.recognize_path("#{route_resouces}", method: method)[:action] != 'error'
+          doc['paths']["/#{route_resouces}"].merge!(path_hash)
+        end
+      else
+        if Rails.application.routes.recognize_path("#{route_resouces}/#{id}", method: method)[:action] != 'error'
+          doc['paths']["/#{route_resouces}/{id}"].merge!(path_hash)
+        end
+      end
+    end
+  -%>
   "paths": <%= JSON.pretty_generate(doc['paths'] ) %>
 }
