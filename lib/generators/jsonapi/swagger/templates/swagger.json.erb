@@ -282,6 +282,7 @@
       path_hash[method] = {
         summary: "#{route_resouces} #{tt(action)}",
         tags: [route_resouces],
+        consumes: ['application/vnd.api+json'],
         produces: ['application/vnd.api+json'],
         security: [{ BasicAuth: [] }],
         parameters: send("#{action.to_s}_resource_parameters"),
