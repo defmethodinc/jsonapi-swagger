@@ -74,11 +74,11 @@ module Jsonapi
     end
 
     def route_resouces
-      resouces_name.tableize
+      resouces_name.tableize.dasherize
     end
 
     def model_class_name
-      (class_path + [file_name]).map!(&:camelize).join("::")
+      (class_path + [file_name]).map!(&:camelize).join('::')
     end
 
     def sortable_fields_desc
@@ -141,7 +141,7 @@ module Jsonapi
         model_klass.columns.each do |col|
           col_name = transform_method ? col.name.send(transform_method) : col.name
           is_array = col.respond_to?(:array) ? col.array : false
-          clos[col_name.to_sym] = { type: swagger_type(col), items_type: col.type, is_array: is_array,  nullable: col.null, comment: col.comment }
+          clos[col_name.to_sym] = { type: swagger_type(col), items_type: col.type, is_array: is_array, nullable: col.null, comment: col.comment }
           clos[col_name.to_sym][:comment] = safe_encode(col.comment) if need_encoding
         end
       end
@@ -162,12 +162,12 @@ module Jsonapi
       return relation.name if relation.respond_to?(:name)
     end
 
-    def t(key, options={})
+    def t(key, options = {})
       content = tt(key, options)
       safe_encode(content)
     end
 
-    def tt(key, options={})
+    def tt(key, options = {})
       options[:scope] = :jsonapi_swagger
       options[:default] = key.to_s.humanize
       I18n.t(key, options)

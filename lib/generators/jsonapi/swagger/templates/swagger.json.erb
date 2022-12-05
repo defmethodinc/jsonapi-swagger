@@ -288,6 +288,10 @@
         responses: send("#{action.to_s}_resource_responses")
       }
 
+      if action == :create
+        path_hash[method][:parameters] = [path_hash[method][:parameters]]
+      end
+
       if action == :list || action == :create
         if Rails.application.routes.recognize_path("#{route_resouces}", method: method)[:action] != 'error'
           doc['paths']["/#{route_resouces}"].merge!(path_hash)
