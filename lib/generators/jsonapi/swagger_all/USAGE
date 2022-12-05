@@ -1,0 +1,5 @@
+Description:
+    Create a JSONAPI Swagger for all resources
+
+Example:
+    rails generate jsonapi:swagger_all
