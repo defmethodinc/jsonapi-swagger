@@ -22,6 +22,10 @@
         relationships.each_value do |relation|
           parameters << { name: :"fields[#{relation_table_name(relation)}]", in: :query, type: :string, description: tt(:display_field), required: false }
         end
+        duplicate = parameters.detect{ |el| parameters.count(el) > 1 }
+        if duplicate
+          parameters.delete_at(parameters.find_index(duplicate))
+        end
       end
     end
 
@@ -34,6 +38,10 @@
         parameters << { name: :"fields[#{route_resouces}]", in: :query, type: :string, description: tt(:display_field), required: false }
         relationships.each_value do |relation|
           parameters << { name: :"fields[#{relation_table_name(relation)}]", in: :query, type: :string, description: tt(:display_field), required: false }
+        end
+        duplicate = parameters.detect{ |el| parameters.count(el) > 1 }
+        if duplicate
+          parameters.delete_at(parameters.find_index(duplicate))
         end
       end
     end
@@ -302,6 +310,14 @@
           doc['paths']["/#{route_resouces}/{id}"].merge!(path_hash)
         end
       end
+    end
+
+    if doc['paths']["/#{route_resouces}"] == {}
+      doc['paths'].delete("/#{route_resouces}")
+    end
+    
+    if doc['paths']["/#{route_resouces}/{id}"] == {}
+      doc['paths'].delete("/#{route_resouces}/{id}")
     end
   -%>
   "paths": <%= JSON.pretty_generate(doc['paths'] ) %>
